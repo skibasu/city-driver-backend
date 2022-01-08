@@ -1,4 +1,5 @@
 const express = require("express")
+const morgan = require("morgan")
 const dotenv = require("dotenv")
 
 const PORT = process.env.PORT || 6000
@@ -11,6 +12,11 @@ dotenv.config({ path: "./config/config.env" })
 
 // App init
 const app = express()
+
+// Dev logging middleware
+if (process.env.NODE_ENV === "development") {
+    app.use(morgan("dev"))
+}
 
 // Mount routers
 // - deliverys
