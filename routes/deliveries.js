@@ -1,14 +1,14 @@
 const express = require("express")
 const router = express.Router()
 const {
-    getDeliverys,
+    getDeliveries,
     getDelivery,
     postDelivery,
     putDelivery,
     deleteDelivery,
-} = require("../controllers/deliverys")
+} = require("../controllers/deliveries")
 
-router.route("/").get(getDeliverys).post(postDelivery)
+router.route("/").get(getDeliveries).post(postDelivery)
 
 router.route("/:id").get(getDelivery).put(putDelivery).delete(deleteDelivery)
 

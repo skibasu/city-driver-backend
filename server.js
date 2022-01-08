@@ -1,17 +1,24 @@
 const express = require("express")
 const morgan = require("morgan")
 const dotenv = require("dotenv")
-
-const PORT = process.env.PORT || 6000
-
-// Route files
-const deliverys = require("./routes/deliverys")
+const connectDB = require("./config/db")
 
 // Load env vars
 dotenv.config({ path: "./config/config.env" })
 
+// Connect to db
+connectDB()
+
+const PORT = process.env.PORT || 6000
+
+// Route files
+const deliveries = require("./routes/deliveries")
+
 // App init
 const app = express()
+
+// Body parser
+app.use(express.json())
 
 // Dev logging middleware
 if (process.env.NODE_ENV === "development") {
@@ -19,12 +26,19 @@ if (process.env.NODE_ENV === "development") {
 }
 
 // Mount routers
-// - deliverys
-app.use(`${process.env.BASE_URL}/deliverys`, deliverys)
+// - deliveries
+app.use(`${process.env.BASE_URL}/deliveries`, deliveries)
 
-app.listen(
+const server = app.listen(
     PORT,
     console.log(
         `server is runing in ${process.env.NODE_ENV} mode on port ${PORT}`
     )
 )
+
+// Handle unhandled promise rejections
+process.on("unhandledRejection", (err, promise) => {
+    console.log(`Error ${err.message}`)
+    //Close server and exit procees
+    server.close(() => process.exit(1))
+})
