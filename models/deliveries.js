@@ -1,6 +1,8 @@
 const mongoose = require("mongoose")
+const getLatLang = require("../utils/getLatLang")
+const addressFormatter = require("../utils/addressFormatter")
 
-const deliverieSchema = new mongoose.Schema({
+const DeliverieSchema = new mongoose.Schema({
     type: {
         type: String,
         enum: ["cash", "online", "card", "free"],
@@ -20,7 +22,10 @@ const deliverieSchema = new mongoose.Schema({
     street: {
         type: String,
         maxlength: [100, "Maksymalna ilość znaków to 100"],
-        required: [true, "Podaj ulicę i numer domu"],
+    },
+    roomNumber: {
+        type: Number,
+        maxlength: [15, "Maksymalna ilość znaków to 15"],
     },
     city: {
         type: String,
@@ -40,20 +45,30 @@ const deliverieSchema = new mongoose.Schema({
         maxlength: [350, "Maksymalna ilość znaków to 350"],
     },
     location: {
-        type: {
-            type: String,
-            enum: ["Point"],
-            required: false,
-        },
-        coordinates: {
-            type: [Number],
-            required: false,
-        },
-        formattedAddress: String,
+        latitude: Number,
+        longitude: Number,
         street: String,
+        roomNumber: Number,
         city: String,
         zipcode: String,
+        formattedAddress: String,
     },
 })
 
-module.exports = mongoose.model("Delivery", deliverieSchema)
+DeliverieSchema.pre("save", async function (next) {
+    const res = await getLatLang(`${this.street}, ${this.city}`)
+    const { latitude, longitude, zipcode, city, streetName } = res[0]
+
+    this.location = {
+        latitude,
+        longitude,
+        zipcode,
+        city,
+        streetName,
+        roomNumber: this.roomNumber,
+        formattedAddress: addressFormatter(streetName, city, zipcode),
+    }
+    next()
+})
+
+module.exports = mongoose.model("Delivery", DeliverieSchema)
