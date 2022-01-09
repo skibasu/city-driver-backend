@@ -25,6 +25,7 @@ const deliverieSchema = new mongoose.Schema({
     city: {
         type: String,
         default: "Wrocław",
+        required: [true, "Podaj miejscowość"],
         maxlength: [50, "Maksymalna ilość znaków to 50"],
     },
     price: {
