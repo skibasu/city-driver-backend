@@ -1,5 +1,6 @@
 const express = require("express")
 const morgan = require("morgan")
+const errorHandler = require("./middleware/error")
 const dotenv = require("dotenv")
 const connectDB = require("./config/db")
 
@@ -28,6 +29,7 @@ if (process.env.NODE_ENV === "development") {
 // Mount routers
 // - deliveries
 app.use(`${process.env.BASE_URL}/deliveries`, deliveries)
+app.use(errorHandler)
 
 const server = app.listen(
     PORT,

@@ -1,115 +1,85 @@
+const ErrorResponse = require("../utils/errorResponse")
+const asyncHandler = require("../middleware/async")
 const Delivery = require("../models/deliveries")
 
 // @desc Get all deliveries
 // @route GET /api/v1/deliveries
 // @access Private
-exports.getDeliveries = async (req, res, next) => {
-    try {
-        const delivery = await Delivery.find()
-        if (!delivery) {
-            return res.status(400).json({ success: false })
-        }
-        res.status(200).json({
-            success: true,
-            count: delivery.length,
-            data: delivery,
-        })
-    } catch (err) {
-        res.status(400).json({
-            success: false,
-            error: error.message,
-        })
+exports.getDeliveries = asyncHandler(async (req, res, next) => {
+    const delivery = await Delivery.find()
+    if (!delivery) {
+        return next(new ErrorResponse(`Nic nie znaleziono`, 404))
     }
-}
+    res.status(200).json({
+        success: true,
+        count: delivery.length,
+        data: delivery,
+    })
+})
 
 // @desc Get specific delivery
 // @route GET /api/v1/deliveries/:id
 // @access Private
-exports.getDelivery = async (req, res, next) => {
-    try {
-        const delivery = await Delivery.findById(req.params.id)
-        if (!delivery) {
-            return res
-                .status(404)
-                .json({ success: false, message: "Nic nie znaleziono!" })
-        }
-        res.status(200).json({
-            success: true,
-            data: delivery,
-        })
-    } catch (err) {
-        return res.status(400).json({ success: false, error: err.message })
+exports.getDelivery = asyncHandler(async (req, res, next) => {
+    const delivery = await Delivery.findById(req.params.id)
+    if (!delivery) {
+        return next(
+            new ErrorResponse(`Nc nie znaleziono z id : ${req.params.id}`, 404)
+        )
     }
-}
+    res.status(200).json({
+        success: true,
+        data: delivery,
+    })
+})
 
 // @desc Add delivery
 // @route POST /api/v1/deliveries/
 // @access Private
-exports.postDelivery = async (req, res, next) => {
-    try {
-        const delivery = await Delivery.create(req.body)
-
-        res.status(201).json({
-            success: true,
-            data: delivery,
-        })
-    } catch (err) {
-        res.status(400).json({
-            success: false,
-            error: error.message,
-        })
-    }
-}
+exports.postDelivery = asyncHandler(async (req, res, next) => {
+    const delivery = await Delivery.create(req.body)
+    res.status(201).json({
+        success: true,
+        data: delivery,
+    })
+})
 
 // @desc update delivery
 // @route PUT /api/v1/deliveries/:id
 // @access Private
-exports.putDelivery = async (req, res, next) => {
-    try {
-        const delivery = await Delivery.findByIdAndUpdate(
-            req.params.id,
-            req.body,
-            {
-                new: true,
-                runvalidators: true,
-            }
+exports.putDelivery = asyncHandler(async (req, res, next) => {
+    const delivery = await Delivery.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+        runvalidators: true,
+    })
+    if (!delivery) {
+        return next(
+            new ErrorResponse(`Nic nie znaleziono z id : ${req.params.id}`, 404)
         )
-        if (!delivery) {
-            return res.status(400).json({ success: false })
-        }
-        res.status(200).json({
-            success: true,
-            data: {
-                message: `Delivery updated - id : ${req.params.id}`,
-                body: delivery,
-            },
-        })
-    } catch (err) {
-        return res.status(400).json({ success: false, error: err.message })
     }
-}
+    res.status(200).json({
+        success: true,
+        data: {
+            message: `Zaktualizowano - id : ${req.params.id}`,
+            body: delivery,
+        },
+    })
+})
 
 // @desc delete delivery
 // @route DELETE /api/v1/deliveries/:id
 // @access Private
-exports.deleteDelivery = async (req, res, next) => {
-    try {
-        const delivery = await Delivery.findByIdAndDelete(req.params.id)
-        if (!delivery) {
-            return res.status(400).json({ success: false })
-        }
-        res.status(200).json({
-            success: true,
-            data: {
-                message: `Delivery deleted - id : ${req.params.id}`,
-            },
-        })
-    } catch (err) {
-        return res.status(400).json({ success: false, error: err.message })
+exports.deleteDelivery = asyncHandler(async (req, res, next) => {
+    const delivery = await Delivery.findByIdAndDelete(req.params.id)
+    if (!delivery) {
+        return next(
+            new ErrorResponse(`Nic nie znaleziono z id : ${req.params.id}`, 404)
+        )
     }
-
     res.status(200).json({
         success: true,
-        data: { message: `Delivery deleted - id : ${req.params.id}` },
+        data: {
+            message: `Usunięto - id : ${req.params.id}`,
+        },
     })
-}
+})
