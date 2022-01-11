@@ -6,7 +6,7 @@ const Delivery = require("../models/deliveries")
 // @route GET /api/v1/deliveries
 // @access Private
 exports.getDeliveries = asyncHandler(async (req, res, next) => {
-    const delivery = await Delivery.find()
+    const delivery = await Delivery.find().sort("-createdAt")
     if (!delivery) {
         return next(new ErrorResponse(`Nic nie znaleziono`, 404))
     }
