@@ -14,6 +14,8 @@ const PORT = process.env.PORT || 6000
 
 // Route files
 const deliveries = require("./routes/deliveries")
+const workdays = require("./routes/workdays")
+const users = require("./routes/users")
 
 // App init
 const app = express()
@@ -29,6 +31,11 @@ if (process.env.NODE_ENV === "development") {
 // Mount routers
 // - deliveries
 app.use(`${process.env.BASE_URL}/deliveries`, deliveries)
+// - workdays
+app.use(`${process.env.BASE_URL}/workdays`, workdays)
+// - users
+app.use(`${process.env.BASE_URL}/users`, users)
+
 app.use(errorHandler)
 
 const server = app.listen(

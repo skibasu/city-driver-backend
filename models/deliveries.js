@@ -2,7 +2,7 @@ const mongoose = require("mongoose")
 const getLatLang = require("../utils/getLatLang")
 const addressFormatter = require("../utils/addressFormatter")
 
-const DeliverieSchema = new mongoose.Schema({
+const DeliverySchema = new mongoose.Schema({
     type: {
         type: String,
         enum: ["cash", "online", "card", "free"],
@@ -53,9 +53,14 @@ const DeliverieSchema = new mongoose.Schema({
         zipcode: String,
         formattedAddress: String,
     },
+    user: {
+        type: mongoose.Schema.ObjectId,
+        ref: "User",
+        required: true,
+    },
 })
 
-DeliverieSchema.pre("save", async function (next) {
+DeliverySchema.pre("save", async function (next) {
     const res = await getLatLang(`${this.street}, ${this.city}`)
     const { latitude, longitude, zipcode, city, streetName } = res[0]
 
@@ -71,4 +76,4 @@ DeliverieSchema.pre("save", async function (next) {
     next()
 })
 
-module.exports = mongoose.model("Delivery", DeliverieSchema)
+module.exports = mongoose.model("Delivery", DeliverySchema)
