@@ -1,7 +1,9 @@
+const path = require("path")
 const express = require("express")
 const morgan = require("morgan")
 const errorHandler = require("./middleware/error")
 const dotenv = require("dotenv")
+const fileUpload = require("express-fileupload")
 const connectDB = require("./config/db")
 
 // Load env vars
@@ -10,7 +12,7 @@ dotenv.config({ path: "./config/config.env" })
 // Connect to db
 connectDB()
 
-const PORT = process.env.PORT || 6000
+const PORT = process.env.PORT || 5000
 
 // Route files
 const deliveries = require("./routes/deliveries")
@@ -28,6 +30,12 @@ if (process.env.NODE_ENV === "development") {
     app.use(morgan("dev"))
 }
 
+// File uploading
+app.use(fileUpload())
+//TODO
+//Set static folder
+app.use(express.static("/Users/su/Desktop/server/public"))
+//END TODO
 // Mount routers
 // - deliveries
 app.use(`${process.env.BASE_URL}/deliveries`, deliveries)
