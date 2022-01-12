@@ -1,5 +1,7 @@
+const path = require("path")
 const ErrorResponse = require("../utils/errorResponse")
 const asyncHandler = require("../middleware/async")
+const upload = require("../config/fileUpload")
 const Users = require("../models/users")
 
 // @desc Get all users
@@ -78,10 +80,59 @@ exports.deleteUser = asyncHandler(async (req, res, next) => {
             new ErrorResponse(`Nic nie znaleziono z id : ${req.params.id}`, 404)
         )
     }
+
     res.status(200).json({
         success: true,
         data: {
             message: `Usunięto uzytkownika - id : ${req.params.id}`,
         },
+    })
+})
+
+// @desc Upload avatar
+// @route PUT /api/v1/user/:id/avatar
+// @access Private
+exports.putAvatar = asyncHandler(async (req, res, next) => {
+    const user = await Users.findById(req.params.id)
+    const file = req.files.file
+    console.log(file)
+    if (!user) {
+        return next(
+            new ErrorResponse(`Nic nie znaleziono z id : ${req.params.id}`, 404)
+        )
+    }
+
+    if (!file) {
+        return next(new ErrorResponse(`Zamieść plik graficzny`, 400))
+    }
+
+    // Validation for picture
+    if (!file.mimetype.startsWith("image")) {
+        return next(new ErrorResponse(`Niezgodny plik`, 400))
+    }
+
+    // Check file size
+    if (file.size > process.env.MAX_FILE_UPLOAD) {
+        return next(
+            new ErrorResponse(`Za duzy plik , maxymalna wielkosc to 1mb`, 400)
+        )
+    }
+
+    //Create custom uniq file name
+    const uniqName = `avatar__${user._id}${path.parse(file.name).ext}`
+
+    file.mv(`${process.env.FILE_UPLOAD_PATH}/${uniqName}`, async (err) => {
+        if (err) {
+            console.log(err)
+            return next(new ErrorResponse(`Problem z dodaniem pliku`, 500))
+        } else {
+            await Users.findByIdAndUpdate(req.params.id, {
+                avatar: file.name,
+            })
+            res.status(200).json({
+                success: true,
+                data: uniqName,
+            })
+        }
     })
 })
