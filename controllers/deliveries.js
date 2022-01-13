@@ -6,10 +6,24 @@ const Delivery = require("../models/deliveries")
 // @route GET /api/v1/deliveries
 // @access Private
 exports.getDeliveries = asyncHandler(async (req, res, next) => {
-    const delivery = await Delivery.find().sort("-createdAt")
-    if (!delivery) {
-        return next(new ErrorResponse(`Nic nie znaleziono`, 404))
+    // Get user id
+    const {
+        user: { id: userId, role: userRole },
+    } = req
+
+    let delivery
+
+    // Get all user deliverys or all delivwrys if user is admin
+    if (userRole === "admin") {
+        delivery = await Delivery.find().sort("-createdAt")
+    } else {
+        delivery = await Delivery.find({ user: userId }).sort("-createdAt")
     }
+
+    if (!delivery) {
+        return next(new ErrorResponse(`Nothing found`, 404))
+    }
+
     res.status(200).json({
         success: true,
         count: delivery.length,
@@ -22,11 +36,25 @@ exports.getDeliveries = asyncHandler(async (req, res, next) => {
 // @access Private
 exports.getDelivery = asyncHandler(async (req, res, next) => {
     const delivery = await Delivery.findById(req.params.id)
+
+    // Get user id
+    const {
+        user: { id: userId, role: userRole },
+    } = req
+
     if (!delivery) {
         return next(
-            new ErrorResponse(`Nc nie znaleziono z id : ${req.params.id}`, 404)
+            new ErrorResponse(`Id doesn't exist : ${req.params.id}`, 404)
         )
     }
+    // Get delivery user id
+    const { user: deliveryUser } = delivery
+
+    // Check if user is owner or admin
+    if (userRole !== "admin" && userId !== deliveryUser.toString()) {
+        return next(new ErrorResponse(`No access for this operation`, 403))
+    }
+
     res.status(200).json({
         success: true,
         data: delivery,
@@ -37,6 +65,11 @@ exports.getDelivery = asyncHandler(async (req, res, next) => {
 // @route POST /api/v1/deliveries/
 // @access Private
 exports.postDelivery = asyncHandler(async (req, res, next) => {
+    // Add user to req body
+    const {
+        user: { _id: user },
+    } = req
+    req.body.user = user
     const delivery = await Delivery.create(req.body)
     res.status(201).json({
         success: true,
@@ -48,19 +81,36 @@ exports.postDelivery = asyncHandler(async (req, res, next) => {
 // @route PUT /api/v1/deliveries/:id
 // @access Private
 exports.putDelivery = asyncHandler(async (req, res, next) => {
-    const delivery = await Delivery.findByIdAndUpdate(req.params.id, req.body, {
-        new: true,
-        runvalidators: true,
-    })
+    let delivery = await Delivery.findById(req.params.id)
+    // Get user id
+    const {
+        user: { id: userId, role: userRole },
+    } = req
+
     if (!delivery) {
         return next(
-            new ErrorResponse(`Nic nie znaleziono z id : ${req.params.id}`, 404)
+            new ErrorResponse(`Id doesn't exist: ${req.params.id}`, 404)
         )
     }
+
+    // Get delivery user id
+    const { user: deliveryUser } = delivery
+
+    // Check if user is owner or admin
+    if (userRole !== "admin" && userId !== deliveryUser.toString()) {
+        return next(new ErrorResponse(`No access for this operation`, 403))
+    }
+
+    // Update delivery
+    delivery = await Delivery.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+        runValidators: true,
+    })
+
     res.status(200).json({
         success: true,
         data: {
-            message: `Zaktualizowano - id : ${req.params.id}`,
+            message: `Updated - id : ${req.params.id}`,
             body: delivery,
         },
     })
@@ -70,12 +120,24 @@ exports.putDelivery = asyncHandler(async (req, res, next) => {
 // @route DELETE /api/v1/deliveries/:id
 // @access Private
 exports.deleteDelivery = asyncHandler(async (req, res, next) => {
-    const delivery = await Delivery.findByIdAndDelete(req.params.id)
+    const delivery = await Delivery.findById(req.params.id)
+    const {
+        user: { id: userId, role: userRole },
+    } = req
     if (!delivery) {
         return next(
             new ErrorResponse(`Nic nie znaleziono z id : ${req.params.id}`, 404)
         )
     }
+    // Get delivery user id
+    const { user: deliveryUser } = delivery
+
+    // Check if user is owner or admin
+    if (userRole !== "admin" && userId !== deliveryUser.toString()) {
+        return next(new ErrorResponse(`No access for this operation`, 403))
+    }
+    delivery.remove()
+
     res.status(200).json({
         success: true,
         data: {

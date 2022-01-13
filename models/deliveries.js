@@ -6,7 +6,7 @@ const DeliverySchema = new mongoose.Schema({
     type: {
         type: String,
         enum: ["cash", "online", "card", "free"],
-        required: [true, "Podaj typ platności!"],
+        required: [true, "type of paiment is required!"],
     },
     finishedAt: {
         type: Date,
@@ -21,28 +21,31 @@ const DeliverySchema = new mongoose.Schema({
     },
     street: {
         type: String,
-        maxlength: [100, "Maksymalna ilość znaków to 100"],
+        maxlength: [100, "Maximum length is 100"],
+        minLength: [2, "Minimum length is  2"],
     },
     roomNumber: {
         type: Number,
-        maxlength: [15, "Maksymalna ilość znaków to 15"],
+        maxlength: [15, "Maximum length is  15"],
     },
     city: {
         type: String,
         default: "Wrocław",
-        required: [true, "Podaj miejscowość"],
-        maxlength: [50, "Maksymalna ilość znaków to 50"],
+        required: [true, "City is required"],
+        maxlength: [50, "Maximum length is  50"],
+        minLength: [2, "Minimum length is 2"],
     },
     price: {
         type: Number,
-        required: [true, "Podaj kwotę do zapłaty"],
+        required: [true, "Price is required"],
+        minLength: [1, "Minimum length is 1"],
     },
     petrol: {
         type: Number,
     },
     note: {
         type: String,
-        maxlength: [350, "Maksymalna ilość znaków to 350"],
+        maxlength: [350, "Maximum length is  350"],
     },
     location: {
         latitude: Number,
@@ -56,7 +59,7 @@ const DeliverySchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.ObjectId,
         ref: "User",
-        required: true,
+        required: [true, "User id is required"],
     },
 })
 

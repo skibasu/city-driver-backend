@@ -1,6 +1,6 @@
-const path = require("path")
 const express = require("express")
 const morgan = require("morgan")
+const cookieParser = require("cookie-parser")
 const errorHandler = require("./middleware/error")
 const dotenv = require("dotenv")
 const fileUpload = require("express-fileupload")
@@ -18,12 +18,16 @@ const PORT = process.env.PORT || 5000
 const deliveries = require("./routes/deliveries")
 const workdays = require("./routes/workdays")
 const users = require("./routes/users")
+const auth = require("./routes/auth")
 
 // App init
 const app = express()
 
 // Body parser
 app.use(express.json())
+
+// Cookie parser
+app.use(cookieParser())
 
 // Dev logging middleware
 if (process.env.NODE_ENV === "development") {
@@ -43,6 +47,8 @@ app.use(`${process.env.BASE_URL}/deliveries`, deliveries)
 app.use(`${process.env.BASE_URL}/workdays`, workdays)
 // - users
 app.use(`${process.env.BASE_URL}/users`, users)
+// - auth
+app.use(`${process.env.BASE_URL}/auth`, auth)
 
 app.use(errorHandler)
 
