@@ -34,6 +34,12 @@ exports.getWorkDay = asyncHandler(async (req, res, next) => {
 // @route POST /api/v1/workdays/
 // @access Private
 exports.postWorkDays = asyncHandler(async (req, res, next) => {
+    // Add user  to req body
+    const {
+        user: { _id: user },
+    } = req
+    req.body.user = user
+
     const workDays = await WorkDays.create(req.body)
     res.status(201).json({
         success: true,
@@ -47,7 +53,7 @@ exports.postWorkDays = asyncHandler(async (req, res, next) => {
 exports.putWorkDay = asyncHandler(async (req, res, next) => {
     const workDay = await WorkDays.findByIdAndUpdate(req.params.id, req.body, {
         new: true,
-        runvalidators: true,
+        runValidators: true,
     })
     if (!workDay) {
         return next(

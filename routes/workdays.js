@@ -1,5 +1,7 @@
 const express = require("express")
 const router = express.Router()
+const { protect } = require("../middleware/auth")
+
 const {
     getWorkDays,
     getWorkDay,
@@ -7,8 +9,8 @@ const {
     putWorkDay,
 } = require("../controllers/workdays")
 
-router.route("/").get(getWorkDays).post(postWorkDays)
+router.route("/").get(protect, getWorkDays).post(protect, postWorkDays)
 
-router.route("/:id").get(getWorkDay).put(putWorkDay)
+router.route("/:id").get(protect, getWorkDay).put(protect, putWorkDay)
 
 module.exports = router

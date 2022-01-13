@@ -1,16 +1,15 @@
 const path = require("path")
 const ErrorResponse = require("../utils/errorResponse")
 const asyncHandler = require("../middleware/async")
-const upload = require("../config/fileUpload")
-const Users = require("../models/users")
+const User = require("../models/users")
 
 // @desc Get all users
 // @route GET /api/v1/users
 // @access Private
 exports.getUsers = asyncHandler(async (req, res, next) => {
-    const users = await Users.find().sort("-createdAt")
+    const users = await User.find().sort("-createdAt")
     if (!users) {
-        return next(new ErrorResponse(`Nic nie znaleziono`, 404))
+        return next(new ErrorResponse(`Nothing found`, 404))
     }
     //  const {name, avatarUrl, email, createdAt} = users
     //  const data = { name, avatarUrl, email, createdAt }
@@ -25,11 +24,11 @@ exports.getUsers = asyncHandler(async (req, res, next) => {
 // @route GET /api/v1/users/:id
 // @access Private
 exports.getUser = asyncHandler(async (req, res, next) => {
-    const user = await Users.findById(req.params.id)
+    const user = await User.findById(req.params.id)
     const { name, avatarUrl, email, createdAt } = user
     const data = { name, avatarUrl, email, createdAt }
     if (!user) {
-        return next(new ErrorResponse(`Nic nie znaleziono`, 404))
+        return next(new ErrorResponse(`Nothing found`, 404))
     }
     res.status(200).json({
         success: true,
@@ -41,7 +40,7 @@ exports.getUser = asyncHandler(async (req, res, next) => {
 // @route POST /api/v1/workdays/
 // @access Private
 exports.postUser = asyncHandler(async (req, res, next) => {
-    const user = await Users.create(req.body)
+    const user = await User.create(req.body)
     res.status(201).json({
         success: true,
         data: user,
@@ -52,19 +51,19 @@ exports.postUser = asyncHandler(async (req, res, next) => {
 // @route PUT /api/v1/workdays/:id
 // @access Private
 exports.putUser = asyncHandler(async (req, res, next) => {
-    const user = await WorkDays.findByIdAndUpdate(req.params.id, req.body, {
+    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
         new: true,
-        runvalidators: true,
+        runValidators: true,
     })
     if (!user) {
         return next(
-            new ErrorResponse(`Nic nie znaleziono z id : ${req.params.id}`, 404)
+            new ErrorResponse(`Nothing found with id : ${req.params.id}`, 404)
         )
     }
     res.status(200).json({
         success: true,
         data: {
-            message: `Zaktualizowano - id : ${req.params.id}`,
+            message: `User is updated : ${req.params.id}`,
             body: user,
         },
     })
@@ -77,14 +76,14 @@ exports.deleteUser = asyncHandler(async (req, res, next) => {
     const user = await Users.findByIdAndDelete(req.params.id)
     if (!user) {
         return next(
-            new ErrorResponse(`Nic nie znaleziono z id : ${req.params.id}`, 404)
+            new ErrorResponse(`Nothing found with id : ${req.params.id}`, 404)
         )
     }
 
     res.status(200).json({
         success: true,
         data: {
-            message: `Usunięto uzytkownika - id : ${req.params.id}`,
+            message: `User is deleted`,
         },
     })
 })
@@ -95,26 +94,26 @@ exports.deleteUser = asyncHandler(async (req, res, next) => {
 exports.putAvatar = asyncHandler(async (req, res, next) => {
     const user = await Users.findById(req.params.id)
     const file = req.files.file
-    console.log(file)
     if (!user) {
-        return next(
-            new ErrorResponse(`Nic nie znaleziono z id : ${req.params.id}`, 404)
-        )
+        return next(new ErrorResponse(`Nothing found id`, 404))
     }
 
     if (!file) {
-        return next(new ErrorResponse(`Zamieść plik graficzny`, 400))
+        return next(new ErrorResponse(`Add file`, 400))
     }
 
     // Validation for picture
     if (!file.mimetype.startsWith("image")) {
-        return next(new ErrorResponse(`Niezgodny plik`, 400))
+        return next(new ErrorResponse(`File should be an image`, 400))
     }
 
     // Check file size
     if (file.size > process.env.MAX_FILE_UPLOAD) {
         return next(
-            new ErrorResponse(`Za duzy plik , maxymalna wielkosc to 1mb`, 400)
+            new ErrorResponse(
+                `Maximum size of the file is ${process.env.MAX_FILE_UPLOAD}`,
+                400
+            )
         )
     }
 
@@ -124,10 +123,12 @@ exports.putAvatar = asyncHandler(async (req, res, next) => {
     file.mv(`${process.env.FILE_UPLOAD_PATH}/${uniqName}`, async (err) => {
         if (err) {
             console.log(err)
-            return next(new ErrorResponse(`Problem z dodaniem pliku`, 500))
+            return next(
+                new ErrorResponse(`File cant be save - server error`, 500)
+            )
         } else {
             await Users.findByIdAndUpdate(req.params.id, {
-                avatar: file.name,
+                avatarUrl: `/${uniqName}`,
             })
             res.status(200).json({
                 success: true,
