@@ -1,5 +1,5 @@
 const NodeGeocoder = require("node-geocoder")
-
+// TODO ADD GOOGLE MAPS - THIS ONE DOESNT WORK WELL !!!!
 const options = {
     provider: process.env.MAP_PROVIDER,
 
