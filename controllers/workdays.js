@@ -39,7 +39,11 @@ exports.postWorkDays = asyncHandler(async (req, res, next) => {
         user: { _id: user },
     } = req
     req.body.user = user
+    const notActiveWorkday = await WorkDays.findOne({ isFinish: false })
 
+    if (notActiveWorkday) {
+        return next(new ErrorResponse(`Close existing workday`, 400))
+    }
     const workDays = await WorkDays.create(req.body)
     res.status(201).json({
         success: true,

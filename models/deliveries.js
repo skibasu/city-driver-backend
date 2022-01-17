@@ -61,6 +61,11 @@ const DeliverySchema = new mongoose.Schema({
         ref: "User",
         required: [true, "User id is required"],
     },
+    workDay: {
+        type: mongoose.Schema.ObjectId,
+        ref: "WorkDay",
+        required: [true, "Workday id is required"],
+    },
 })
 
 DeliverySchema.pre("save", async function (next) {

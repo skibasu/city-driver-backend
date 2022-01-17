@@ -1,6 +1,7 @@
 const ErrorResponse = require("../utils/errorResponse")
 const asyncHandler = require("../middleware/async")
 const Delivery = require("../models/deliveries")
+const WorkDays = require("../models/workdays")
 
 // @desc Get all deliveries
 // @route GET /api/v1/deliveries
@@ -36,6 +37,8 @@ exports.getDeliveries = asyncHandler(async (req, res, next) => {
 // @access Private
 exports.getDelivery = asyncHandler(async (req, res, next) => {
     const delivery = await Delivery.findById(req.params.id)
+    const { _id: workdayId } = await WorkDays.findOne({ isFinish: false })
+    delivery.workDay = workdayId
 
     // Get user id
     const {
@@ -69,8 +72,18 @@ exports.postDelivery = asyncHandler(async (req, res, next) => {
     const {
         user: { _id: user },
     } = req
+
     req.body.user = user
+
+    const workDay = await WorkDays.findOne({ isFinish: false })
+    if (!workDay) {
+        return next(new ErrorResponse(`Workday doesnt exist`, 404))
+    }
+
+    req.body.workDay = workDay._id
+
     const delivery = await Delivery.create(req.body)
+
     res.status(201).json({
         success: true,
         data: delivery,
