@@ -1,24 +1,44 @@
 const ErrorResponse = require("../utils/errorResponse")
 const asyncHandler = require("../middleware/async")
 const Delivery = require("../models/deliveries")
+const WorkDays = require("../models/workdays")
 
 // @desc Get all deliveries
 // @route GET /api/v1/deliveries
 // @access Private
 exports.getDeliveries = asyncHandler(async (req, res, next) => {
+    let delivery
+    let sum
+
     // Get user id
     const {
-        user: { id: userId, role: userRole },
+        user: { id: userId },
     } = req
 
-    let delivery
-
-    // Get all user deliverys or all delivwrys if user is admin
-    if (userRole === "admin") {
-        delivery = await Delivery.find().sort("-createdAt")
-    } else {
-        delivery = await Delivery.find({ user: userId }).sort("-createdAt")
+    // Get active workDay
+    if (!req.activeWorkDay && req.activeWorkDay.id) {
+        return next(
+            new ErrorResponse(
+                `Cant add delivery if work day doesn't exist`,
+                400
+            )
+        )
     }
+    delivery = await Delivery.find({
+        user: userId,
+        workDay: req.activeWorkDay.id,
+    }).sort("-createdAt")
+
+    // Sum all prices by types for user
+    sum = await Delivery.aggregate([
+        { $match: { workDay: req.activeWorkDay._id, user: req.user._id } },
+        {
+            $group: {
+                _id: "$type",
+                total: { $sum: "$price" },
+            },
+        },
+    ])
 
     if (!delivery) {
         return next(new ErrorResponse(`Nothing found`, 404))
@@ -27,6 +47,7 @@ exports.getDeliveries = asyncHandler(async (req, res, next) => {
     res.status(200).json({
         success: true,
         count: delivery.length,
+        summary: sum,
         data: delivery,
     })
 })
@@ -69,8 +90,37 @@ exports.postDelivery = asyncHandler(async (req, res, next) => {
     const {
         user: { _id: user },
     } = req
+
     req.body.user = user
+
+    if (!req.activeWorkDay) {
+        return next(
+            new ErrorResponse(
+                `Cant add delivery if work day doesn't exist`,
+                400
+            )
+        )
+    }
+
+    // Add workDay to req body
+    const {
+        activeWorkDay: { id: workDay },
+    } = req
+    req.body.workDay = workDay
+
+    // Crete Delivery
     const delivery = await Delivery.create(req.body)
+
+    // Add deliveries to workDay
+    await WorkDays.findByIdAndUpdate(
+        workDay,
+        { $push: { deliveries: delivery.id } },
+        {
+            new: true,
+            runValidators: true,
+        }
+    )
+
     res.status(201).json({
         success: true,
         data: delivery,
@@ -110,7 +160,7 @@ exports.putDelivery = asyncHandler(async (req, res, next) => {
     res.status(200).json({
         success: true,
         data: {
-            message: `Updated - id : ${req.params.id}`,
+            message: `Updated`,
             body: delivery,
         },
     })

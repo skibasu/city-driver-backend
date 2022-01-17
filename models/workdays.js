@@ -12,15 +12,16 @@ const WorkDay = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    modifyAt: {
+        type: Array,
+        default: [],
+    },
     user: {
         type: mongoose.Schema.ObjectId,
         ref: "User",
         required: [true, "User id is required"],
     },
-})
-
-WorkDay.pre("save", async function (next) {
-    next()
+    deliveries: [{ type: mongoose.Schema.Types.ObjectId, ref: "Delivery" }],
 })
 
 module.exports = mongoose.model("WorkDay", WorkDay)

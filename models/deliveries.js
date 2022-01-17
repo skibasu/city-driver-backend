@@ -1,6 +1,6 @@
 const mongoose = require("mongoose")
+const CONFIG = require("../config/config")
 const getLatLang = require("../utils/getLatLang")
-const addressFormatter = require("../utils/addressFormatter")
 
 const DeliverySchema = new mongoose.Schema({
     type: {
@@ -19,8 +19,16 @@ const DeliverySchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    country: {
+        type: String,
+        default: "Poland",
+        required: [true, "Country is required"],
+        maxlength: [100, "Maximum length is 100"],
+        minLength: [2, "Minimum length is  2"],
+    },
     street: {
         type: String,
+        required: [true, "Street is required"],
         maxlength: [100, "Maximum length is 100"],
         minLength: [2, "Minimum length is  2"],
     },
@@ -61,22 +69,29 @@ const DeliverySchema = new mongoose.Schema({
         ref: "User",
         required: [true, "User id is required"],
     },
+    workDay: {
+        type: mongoose.Schema.ObjectId,
+        ref: "WorkDay",
+        required: [true, "WorkDay id is required"],
+    },
 })
 
 DeliverySchema.pre("save", async function (next) {
-    const res = await getLatLang(`${this.street}, ${this.city}`)
-    const { latitude, longitude, zipcode, city, streetName } = res[0]
-
-    this.location = {
-        latitude,
-        longitude,
-        zipcode,
-        city,
-        streetName,
-        roomNumber: this.roomNumber,
-        formattedAddress: addressFormatter(streetName, city, zipcode),
-    }
+    this.location = await getLatLang(`${this.street} ${this.city}`)
     next()
 })
 
+DeliverySchema.pre("findOneAndUpdate", async function (next) {
+    const docToUpdate = await this.model.findOne(this.getQuery())
+    const update = this.getUpdate()
+
+    const street = update.street || docToUpdate.street
+    const city = update.city || docToUpdate.city
+
+    update.location = await getLatLang(`${street} ${city}`)
+
+    this.setUpdate(update)
+    next()
+})
+exports.deliverSchema = () => DeliverySchema
 module.exports = mongoose.model("Delivery", DeliverySchema)
