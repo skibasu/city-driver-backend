@@ -19,6 +19,7 @@ const deliveries = require("./routes/deliveries")
 const workdays = require("./routes/workdays")
 const users = require("./routes/users")
 const auth = require("./routes/auth")
+const admin = require("./routes/admin")
 
 // App init
 const app = express()
@@ -49,6 +50,8 @@ app.use(`${process.env.BASE_URL}/workdays`, workdays)
 app.use(`${process.env.BASE_URL}/users`, users)
 // - auth
 app.use(`${process.env.BASE_URL}/auth`, auth)
+// - admin
+app.use(`${process.env.BASE_URL}/admin`, admin)
 
 app.use(errorHandler)
 

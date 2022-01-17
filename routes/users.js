@@ -1,5 +1,5 @@
 const express = require("express")
-const { protect } = require("../middleware/auth")
+const { protect, authorize } = require("../middleware/auth")
 
 const router = express.Router()
 const {
@@ -10,13 +10,13 @@ const {
     putAvatar,
 } = require("../controllers/users")
 
-router.route("/").get(protect, getUsers)
+router.route("/").get(protect, authorize("admin"), getUsers)
 
 router
     .route("/:id")
-    .get(protect, getUser)
-    .put(protect, putUser)
-    .delete(protect, deleteUser)
+    .get(protect, authorize("admin"), getUser)
+    .put(protect, authorize("user", "admin"), putUser)
+    .delete(protect, authorize("user", "admin"), deleteUser)
 
-router.route("/:id/avatar").put(protect, putAvatar)
+router.route("/:id/avatar").put(protect, authorize("user", "admin"), putAvatar)
 module.exports = router
