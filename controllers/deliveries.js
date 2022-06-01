@@ -3,6 +3,16 @@ const asyncHandler = require("../middleware/async")
 const Delivery = require("../models/deliveries")
 const WorkDays = require("../models/workdays")
 
+exports.getTestDeliveries = asyncHandler(async (req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*")
+    res.header(
+        "Access-Control-Allow-Headers",
+        "Origin, X-Requested-With, Content-Type, Accept"
+    )
+    res.status(200).json({
+        success: true,
+    })
+})
 // @desc Get all deliveries
 // @route GET /api/v1/deliveries
 // @access Private
@@ -16,10 +26,10 @@ exports.getDeliveries = asyncHandler(async (req, res, next) => {
     } = req
 
     // Get active workDay
-    if (!req.activeWorkDay && req.activeWorkDay.id) {
+    if (!req.activeWorkDay?.id) {
         return next(
             new ErrorResponse(
-                `Cant add delivery if work day doesn't exist`,
+                `Cant get delivery if work day doesn't exist`,
                 400
             )
         )
@@ -57,8 +67,6 @@ exports.getDeliveries = asyncHandler(async (req, res, next) => {
 // @access Private
 exports.getDelivery = asyncHandler(async (req, res, next) => {
     const delivery = await Delivery.findById(req.params.id)
-    const { _id: workdayId } = await WorkDays.findOne({ isFinish: false })
-    delivery.workDay = workdayId
 
     // Get user id
     const {
@@ -77,6 +85,12 @@ exports.getDelivery = asyncHandler(async (req, res, next) => {
     if (userRole !== "admin" && userId !== deliveryUser.toString()) {
         return next(new ErrorResponse(`No access for this operation`, 403))
     }
+
+    const workday = await WorkDays.findOne({ isFinish: false })
+    if (!workday) {
+        return next(new ErrorResponse(`No access for this operation`, 403))
+    }
+    delivery.workDay = workday._id
 
     res.status(200).json({
         success: true,

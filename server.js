@@ -3,6 +3,7 @@ const morgan = require("morgan")
 const cookieParser = require("cookie-parser")
 const errorHandler = require("./middleware/error")
 const dotenv = require("dotenv")
+var cors = require("cors")
 const fileUpload = require("express-fileupload")
 const connectDB = require("./config/db")
 
@@ -26,13 +27,19 @@ const app = express()
 
 // Body parser
 app.use(express.json())
-
+// app.use(cors())
 // Cookie parser
 app.use(cookieParser())
 
 // Dev logging middleware
 if (process.env.NODE_ENV === "development") {
     app.use(morgan("dev"))
+}
+const corsOptions = {
+    //To allow requests from client
+    origin: ["http://localhost:3000"],
+    credentials: true,
+    exposedHeaders: ["set-cookie"],
 }
 
 // File uploading
@@ -45,11 +52,11 @@ app.use(express.static("/Users/su/Desktop/server/public"))
 // - deliveries
 app.use(`${process.env.BASE_URL}/deliveries`, deliveries)
 // - workdays
-app.use(`${process.env.BASE_URL}/workdays`, workdays)
+app.use(`${process.env.BASE_URL}/workdays`, cors(corsOptions), workdays)
 // - users
 app.use(`${process.env.BASE_URL}/users`, users)
 // - auth
-app.use(`${process.env.BASE_URL}/auth`, auth)
+app.use(`${process.env.BASE_URL}/auth`, cors(corsOptions), auth)
 // - admin
 app.use(`${process.env.BASE_URL}/admin`, admin)
 

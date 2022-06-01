@@ -1,6 +1,7 @@
 const ErrorResponse = require("../utils/errorResponse")
 const asyncHandler = require("../middleware/async")
 const User = require("../models/users")
+const users = require("../models/users")
 
 // @desc Register user
 // @route GET /api/v1/auth/register
@@ -75,7 +76,7 @@ const sendTokenResponse = (user, statusCode, res) => {
     // Create Token JWT_COOKIE_EXPIRE
     // Create Token
     const token = user.getSignetJwtToken()
-
+    const { name, surname, avatarUrl, email } = user
     const options = {
         expires: new Date(
             Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000
@@ -84,5 +85,5 @@ const sendTokenResponse = (user, statusCode, res) => {
     }
     res.status(statusCode)
         .cookie("token", token, options)
-        .json({ success: true, token })
+        .json({ token, name, surname, avatarUrl, email })
 }

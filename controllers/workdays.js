@@ -46,10 +46,18 @@ exports.getWorkDay = asyncHandler(async (req, res, next) => {
         user: { id: userId, role: userRole },
     } = req
 
-    const workDay = await WorkDays.findById(req.params.id).populate({
-        path: "deliveries",
-        select: "-user -workDay",
-    })
+    let workDay
+    if (req.params.id === "active") {
+        workDay = await WorkDays.findOne(
+            { isFinish: false },
+            { deliveries: 0, modifyAt: 0, __v: 0 }
+        )
+    } else {
+        workDay = await WorkDays.findById(req.params.id).populate({
+            path: "deliveries",
+            select: "-user -workDay",
+        })
+    }
 
     if (!workDay) {
         return next(new ErrorResponse(`Nic nie znaleziono`, 404))
