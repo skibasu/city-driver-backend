@@ -8,12 +8,11 @@ const {
     postDelivery,
     putDelivery,
     deleteDelivery,
-    getTestDeliveries,
 } = require("../controllers/deliveries")
 
 router
     .route("/")
-    .get(getTestDeliveries)
+    .get(protect, authorize("user", "admin"), getDeliveries)
     .post(protect, authorize("user", "admin"), postDelivery)
 
 router

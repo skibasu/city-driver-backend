@@ -13,7 +13,7 @@ dotenv.config({ path: "./config/config.env" })
 // Connect to db
 connectDB()
 
-const PORT = process.env.PORT || 5000
+const PORT = process.env.PORT || 5001
 
 // Route files
 const deliveries = require("./routes/deliveries")

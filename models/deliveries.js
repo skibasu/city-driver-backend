@@ -5,7 +5,7 @@ const getLatLang = require("../utils/getLatLang")
 const DeliverySchema = new mongoose.Schema({
     type: {
         type: String,
-        enum: ["cash", "online", "card", "free"],
+        enum: ["CASH", "ONLINE", "CARD", "FREE"],
         required: [true, "type of paiment is required!"],
     },
     finishedAt: {

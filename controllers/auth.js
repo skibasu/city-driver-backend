@@ -1,7 +1,6 @@
 const ErrorResponse = require("../utils/errorResponse")
 const asyncHandler = require("../middleware/async")
 const User = require("../models/users")
-const users = require("../models/users")
 
 // @desc Register user
 // @route GET /api/v1/auth/register
@@ -83,7 +82,9 @@ const sendTokenResponse = (user, statusCode, res) => {
         ),
         httpOnly: true,
     }
-    res.status(statusCode)
-        .cookie("token", token, options)
-        .json({ token, name, surname, avatarUrl, email })
+    res.status(statusCode).cookie("token", token, options).json({
+        user: { name, surname, avatarUrl, email },
+        error: null,
+        token,
+    })
 }

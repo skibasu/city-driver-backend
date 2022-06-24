@@ -1,6 +1,7 @@
 const ErrorResponse = require("../utils/errorResponse")
 const asyncHandler = require("../middleware/async")
 const WorkDays = require("../models/workdays")
+const workdays = require("../models/workdays")
 
 // @desc Get all workDays bu user
 // @route GET /api/v1/workdays
@@ -45,13 +46,40 @@ exports.getWorkDay = asyncHandler(async (req, res, next) => {
     const {
         user: { id: userId, role: userRole },
     } = req
-
+    const summary = [
+        { _id: "online", total: 0 },
+        { _id: "cash", total: 0 },
+        { _id: "card", total: 0 },
+    ]
     let workDay
     if (req.params.id === "active") {
         workDay = await WorkDays.findOne(
             { isFinish: false },
             { deliveries: 0, modifyAt: 0, __v: 0 }
         )
+    } else if (req.params.id === "last") {
+        workDay = await WorkDays.find({ isFinish: true })
+            .sort({ finishedAt: 1 })
+
+            .populate({
+                path: "deliveries",
+                select: "-user -workDay",
+            })
+            .limit(1)
+        workDay = workDay[0]
+
+        workDay.deliveries.forEach((elem) => {
+            if (elem.type === "online") {
+                summary[0].total += elem.price
+            }
+            if (elem.type === "cash") {
+                summary[1].total += elem.price
+            }
+            if (elem.type === "card") {
+                summary[2].total += elem.price
+            }
+        })
+        workDay.summary = summary
     } else {
         workDay = await WorkDays.findById(req.params.id).populate({
             path: "deliveries",
@@ -71,6 +99,7 @@ exports.getWorkDay = asyncHandler(async (req, res, next) => {
     }
     res.status(200).json({
         success: true,
+        summary: summary || [],
         data: workDay,
     })
 })
@@ -114,9 +143,23 @@ exports.putWorkDay = asyncHandler(async (req, res, next) => {
         isFinish: false,
         user: userId,
     })
-
+    const summary = [
+        { _id: "online", total: 0 },
+        { _id: "cash", total: 0 },
+        { _id: "card", total: 0 },
+    ]
     let workDay = await WorkDays.findById(req.params.id)
-
+    workDay.deliveries.forEach((elem) => {
+        if (elem.type === "online") {
+            summary[0].total += elem.price
+        }
+        if (elem.type === "cash") {
+            summary[1].total += elem.price
+        }
+        if (elem.type === "card") {
+            summary[2].total += elem.price
+        }
+    })
     if (!workDay) {
         return next(
             new ErrorResponse(`Nic nie znaleziono z id : ${req.params.id}`, 404)
@@ -154,6 +197,7 @@ exports.putWorkDay = asyncHandler(async (req, res, next) => {
 
     res.status(200).json({
         success: true,
+        summary,
         data: workDay,
     })
 })

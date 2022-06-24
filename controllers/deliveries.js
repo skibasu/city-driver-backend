@@ -126,7 +126,19 @@ exports.postDelivery = asyncHandler(async (req, res, next) => {
 
     // Crete Delivery
     const delivery = await Delivery.create(req.body)
-
+    const deliveries = await Delivery.find({
+        user,
+        workDay,
+    }).sort("-createdAt")
+    const sum = await Delivery.aggregate([
+        { $match: { workDay: req.activeWorkDay._id, user: req.user._id } },
+        {
+            $group: {
+                _id: "$type",
+                total: { $sum: "$price" },
+            },
+        },
+    ])
     // Add deliveries to workDay
     await WorkDays.findByIdAndUpdate(
         workDay,
@@ -139,7 +151,9 @@ exports.postDelivery = asyncHandler(async (req, res, next) => {
 
     res.status(201).json({
         success: true,
-        data: delivery,
+        count: deliveries.length,
+        summary: sum,
+        data: deliveries,
     })
 })
 
