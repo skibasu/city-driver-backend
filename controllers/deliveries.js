@@ -166,6 +166,9 @@ exports.putDelivery = asyncHandler(async (req, res, next) => {
     const {
         user: { id: userId, role: userRole },
     } = req
+    const {
+        activeWorkDay: { id: workDay },
+    } = req
 
     if (!delivery) {
         return next(
@@ -186,13 +189,25 @@ exports.putDelivery = asyncHandler(async (req, res, next) => {
         new: true,
         runValidators: true,
     })
-
+    const deliveries = await Delivery.find({
+        user: userId,
+        workDay,
+    }).sort("-createdAt")
+    const sum = await Delivery.aggregate([
+        { $match: { workDay: req.activeWorkDay._id, user: req.user._id } },
+        {
+            $group: {
+                _id: "$type",
+                total: { $sum: "$price" },
+            },
+        },
+    ])
     res.status(200).json({
         success: true,
-        data: {
-            message: `Updated`,
-            body: delivery,
-        },
+        count: deliveries.length,
+        message: `Updated`,
+        data: deliveries,
+        summary: sum,
     })
 })
 
