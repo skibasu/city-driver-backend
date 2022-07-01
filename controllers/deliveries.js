@@ -235,8 +235,7 @@ exports.deleteDelivery = asyncHandler(async (req, res, next) => {
 
     res.status(200).json({
         success: true,
-        data: {
-            message: `Usunięto - id : ${req.params.id}`,
-        },
+        message: `Usunięto - id : ${req.params.id}`,
+        data: delivery,
     })
 })
